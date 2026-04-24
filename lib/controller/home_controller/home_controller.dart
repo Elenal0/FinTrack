@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -111,9 +112,15 @@ class HomeController extends GetxController {
       await prefs.setString('name', userData['name'] ?? '');
       await prefs.setString('email', userData['email'] ?? '');
 
-      userEmail.value = userData['email'];
-      userName.value = userData['name'];
+      userEmail.value = userData['email'] ?? '';
+      userName.value = userData['name'] ?? '';
       totalBalance.value = (userData['balance'] ?? 0.0).toDouble();
+      imageUrl.value = userData['url'] ?? '';
+      
+      // Sync with NavController so UI updates
+      if (Get.isRegistered<NavController>()) {
+        Get.find<NavController>().profileImagePath.value = imageUrl.value;
+      }
       debugPrint(totalBalance.value.toString());
 
       // Load preferences
@@ -159,6 +166,43 @@ class HomeController extends GetxController {
         Get.find<NavController>().goToTab(0);
       }
       Get.offAllNamed(Routes.LOGIN);
+    }
+  }
+
+  Future<void> uploadProfileImage(File imageFile) async {
+    final user = supabaseC.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      CustomToast.successToast("Uploading", "Please wait...");
+      
+      // 1. Upload to Supabase Storage
+      final fileExt = imageFile.path.split('.').last;
+      final fileName = '${user.id}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+      final path = 'profiles/$fileName';
+
+      await supabaseC.storage.from('avatars').upload(path, imageFile);
+
+      // 2. Get the public URL
+      final publicUrl = supabaseC.storage.from('avatars').getPublicUrl(path);
+
+      // 3. Update the users table
+      await supabaseC.from('users').update({'url': publicUrl}).eq('id', user.id);
+
+      // 4. Update local state
+      imageUrl.value = publicUrl;
+      if (Get.isRegistered<NavController>()) {
+        Get.find<NavController>().profileImagePath.value = publicUrl;
+      }
+      
+      // Optional: Save to SharedPreferences for quick cache
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profile_image_path', publicUrl);
+      
+      CustomToast.successToast("Success", "Profile photo updated");
+    } catch (e) {
+      debugPrint('Error uploading image: $e');
+      CustomToast.errorToast("Upload Failed", "Could not upload profile picture.");
     }
   }
 

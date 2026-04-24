@@ -85,6 +85,46 @@ class _HeaderState extends State<_Header> {
     return '${p.first.isNotEmpty ? p.first[0] : ''}${p.length > 1 && p.last.isNotEmpty ? p.last[0] : ''}'.toUpperCase();
   }
 
+  Widget _buildAvatarImage(String? imgPath, String name, bool isDark) {
+    if (imgPath != null && imgPath.isNotEmpty) {
+      if (imgPath.startsWith('http')) {
+        return Image.network(
+          imgPath,
+          width: 37,
+          height: 37,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _fallbackAvatar(name, isDark),
+        );
+      } else if (File(imgPath).existsSync()) {
+        return Image.file(
+          File(imgPath),
+          width: 37,
+          height: 37,
+          fit: BoxFit.cover,
+        );
+      }
+    }
+    return _fallbackAvatar(name, isDark);
+  }
+
+  Widget _fallbackAvatar(String name, bool isDark) {
+    return Container(
+      width: 37,
+      height: 37,
+      color: isDark ? AppColor.darkCard : AppColor.primary.withValues(alpha: 0.12),
+      child: Center(
+        child: Text(
+          _initials(name),
+          style: TextStyle(
+            color: AppColor.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
@@ -133,30 +173,7 @@ class _HeaderState extends State<_Header> {
                         ),
                         padding: const EdgeInsets.all(1.5),
                         child: ClipOval(
-                          child: imgPath != null && File(imgPath).existsSync()
-                              ? Image.file(
-                                  File(imgPath),
-                                  width: 37,
-                                  height: 37,
-                                  fit: BoxFit.cover,
-                                )
-                              : Container(
-                                  width: 37,
-                                  height: 37,
-                                  color: isDark
-                                      ? AppColor.darkCard
-                                      : AppColor.primary.withValues(alpha: 0.12),
-                                  child: Center(
-                                    child: Text(
-                                      _initials(name),
-                                      style: TextStyle(
-                                        color: AppColor.primary,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                          child: _buildAvatarImage(imgPath, name, isDark),
                         ),
                       );
                     }),

@@ -54,8 +54,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       imageQuality: 85,
     );
     if (picked != null) {
-      await Get.find<NavController>().setProfileImage(picked.path);
-      CustomToast.successToast('Updated', 'Profile photo changed');
+      // Call the controller method to upload to Supabase
+      final ctrl = Get.find<HomeController>();
+      await ctrl.uploadProfileImage(File(picked.path));
     }
   }
 
@@ -245,6 +246,26 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Widget _buildFallbackAvatar(HomeController ctrl, bool isDark) {
+    final name = ctrl.userName.value;
+    final initials = _initials(name);
+    return Container(
+      width: 100,
+      height: 100,
+      color: AppColor.primary.withValues(alpha: 0.12),
+      child: Center(
+        child: Text(
+          initials,
+          style: const TextStyle(
+            color: AppColor.primary,
+            fontSize: 36,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildProfileHeader(HomeController ctrl, bool isDark,
       Color textPrimary, Color textMuted, Color cardBg) {
     return Container(
@@ -313,31 +334,28 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: ClipOval(
                         child: Obx(() {
                           final imgPath = Get.find<NavController>().profileImagePath.value;
-                          if (imgPath != null && File(imgPath).existsSync()) {
-                            return Image.file(
-                              File(imgPath),
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            );
+                          
+                          if (imgPath != null && imgPath.isNotEmpty) {
+                            if (imgPath.startsWith('http')) {
+                              return Image.network(
+                                imgPath,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    _buildFallbackAvatar(ctrl, isDark),
+                              );
+                            } else if (File(imgPath).existsSync()) {
+                              return Image.file(
+                                File(imgPath),
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              );
+                            }
                           }
-                          final name = ctrl.userName.value;
-                          final initials = _initials(name);
-                          return Container(
-                            width: 100,
-                            height: 100,
-                            color: AppColor.primary.withValues(alpha: 0.12),
-                            child: Center(
-                              child: Text(
-                                initials,
-                                style: const TextStyle(
-                                  color: AppColor.primary,
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          );
+                          
+                          return _buildFallbackAvatar(ctrl, isDark);
                         }),
                       ),
                     ),
@@ -371,7 +389,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ],
               ),
             ),
-
+            
             const SizedBox(height: 16),
 
             // ── Name ──────────────────────────────────────────────
