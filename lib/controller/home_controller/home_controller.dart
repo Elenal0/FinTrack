@@ -79,16 +79,35 @@ class HomeController extends GetxController {
     final prefs = await SharedPreferences.getInstance();
     final user = supabaseC.auth.currentUser;
     if (user != null) {
-      final response = await supabaseC.from("users").select().eq('id', user.id);
+      var response = await supabaseC.from("users").select().eq('id', user.id);
 
       if (response.isEmpty) {
-        CustomToast.errorToast("Error", 'Error fetching user profile');
-        return;
+        // Fallback: If the row doesn't exist, try to create it.
+        try {
+          await supabaseC.from('users').upsert({
+            'id': user.id,
+            'email': user.email ?? '',
+            'name': user.userMetadata?['full_name'] ??
+                user.userMetadata?['name'] ??
+                '',
+            'balance': 0,
+            'url': user.userMetadata?['avatar_url'] ?? '',
+          }, onConflict: 'id', ignoreDuplicates: true);
+
+          response = await supabaseC.from("users").select().eq('id', user.id);
+          if (response.isEmpty) {
+            CustomToast.errorToast("Error", 'Error fetching user profile');
+            return;
+          }
+        } catch (e) {
+          CustomToast.errorToast("Error", 'Error creating user profile: $e');
+          return;
+        }
       }
 
       final userData = response.first;
-      await prefs.setString('name', userData['name']);
-      await prefs.setString('email', userData['email']);
+      await prefs.setString('name', userData['name'] ?? '');
+      await prefs.setString('email', userData['email'] ?? '');
 
       userEmail.value = userData['email'];
       userName.value = userData['name'];

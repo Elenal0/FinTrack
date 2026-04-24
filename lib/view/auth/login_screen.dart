@@ -65,7 +65,7 @@ class LoginScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 Text(
-                  'Welcome to Spendify',
+                  'Welcome to Spense',
                   style: TextStyle(
                     color: textPrimary,
                     fontSize: 26,

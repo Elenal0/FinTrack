@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -14,6 +16,8 @@ import 'package:spendify/model/savings_goal_model.dart';
 import 'package:spendify/services/insights_service.dart';
 import 'package:spendify/view/home/components/transaction_list.dart';
 import 'package:spendify/view/wallet/add_transaction_screen.dart';
+import 'package:spendify/controller/nav_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:spendify/view/wallet/sms_import_screen.dart';
 
@@ -56,13 +60,35 @@ class HomeScreen extends StatelessWidget {
 // Header — greeting, balance, visibility toggle
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _Header extends StatelessWidget {
+class _Header extends StatefulWidget {
   final bool isDark;
   final HomeController ctrl;
   const _Header({required this.isDark, required this.ctrl});
 
   @override
+  State<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<_Header> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _goToProfile() {
+    Get.find<NavController>().goToTab(3);
+  }
+
+  String _initials(String name) {
+    if (name.isEmpty) return '?';
+    final p = name.trim().split(' ');
+    return '${p.first.isNotEmpty ? p.first[0] : ''}${p.length > 1 && p.last.isNotEmpty ? p.last[0] : ''}'.toUpperCase();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final ctrl = widget.ctrl;
     final textPrimary = isDark ? AppColor.textPrimary : const Color(0xFF09090B);
     final textMuted = isDark ? AppColor.textSecondary : const Color(0xFF71717A);
     final divColor = isDark ? AppColor.darkBorder : const Color(0xFFF4F4F5);
@@ -88,16 +114,63 @@ class _Header extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 children: [
+                  // ── Profile picture avatar ──────────────────────
+                  GestureDetector(
+                    onTap: _goToProfile,
+                    child: Obx(() {
+                      final imgPath = Get.find<NavController>().profileImagePath.value;
+                      return Container(
+                        width: 40,
+                        height: 40,
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [AppColor.primary, AppColor.income],
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(1.5),
+                        child: ClipOval(
+                          child: imgPath != null && File(imgPath).existsSync()
+                              ? Image.file(
+                                  File(imgPath),
+                                  width: 37,
+                                  height: 37,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 37,
+                                  height: 37,
+                                  color: isDark
+                                      ? AppColor.darkCard
+                                      : AppColor.primary.withValues(alpha: 0.12),
+                                  child: Center(
+                                    child: Text(
+                                      _initials(name),
+                                      style: TextStyle(
+                                        color: AppColor.primary,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      );
+                    }),
+                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        first.isEmpty ? greeting : '$greeting, $first',
+                        first.isEmpty ? greeting : '$greeting',
                         style: TextStyle(color: textMuted, fontSize: 13),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Your finances',
+                        'Spense',
                         style: TextStyle(
                           color: textPrimary,
                           fontSize: 18,
@@ -236,7 +309,7 @@ class _Header extends StatelessWidget {
     );
   }
 
-  String _compact(double v) {
+  static String _compact(double v) {
     if (v >= 100000) return '${(v / 100000).toStringAsFixed(1)}L';
     if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
     return NumberFormat('#,##0', 'en_IN').format(v);

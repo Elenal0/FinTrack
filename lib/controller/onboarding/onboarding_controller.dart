@@ -109,20 +109,35 @@ class OnboardingController extends GetxController {
               budgetController.text.replaceAll(',', '').trim()) ??
           0.0;
 
-      await supabaseC.from('user_profiles').upsert({
-        'user_id': userId,
+      final existing = await supabaseC
+          .from('user_profiles')
+          .select('user_id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      final payload = {
         'currency': currency.value,
         'currency_symbol': currencySymbol.value,
         'occupation': occupation.value,
         'monthly_budget': budget,
         'selected_categories': selectedCategories.toList(),
         'onboarding_complete': true,
-      });
+      };
+
+      if (existing != null) {
+        await supabaseC
+            .from('user_profiles')
+            .update(payload)
+            .eq('user_id', userId);
+      } else {
+        payload['user_id'] = userId;
+        await supabaseC.from('user_profiles').insert(payload);
+      }
 
       Get.offAll(() => const BottomNav());
     } catch (e) {
       debugPrint('Onboarding save error: $e');
-      CustomToast.errorToast('Error', 'Could not save preferences. Try again.');
+      CustomToast.errorToast('Error', e.toString());
     } finally {
       isSaving.value = false;
     }
@@ -136,15 +151,29 @@ class OnboardingController extends GetxController {
         Get.offAllNamed(Routes.LOGIN);
         return;
       }
-      await supabaseC.from('user_profiles').upsert({
-        'user_id': userId,
+      final existing = await supabaseC
+          .from('user_profiles')
+          .select('user_id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      final payload = {
         'currency': currency.value,
         'currency_symbol': currencySymbol.value,
-        'occupation': occupation.value,
         'monthly_budget': 0.0,
         'selected_categories': <String>[],
         'onboarding_complete': true,
-      });
+      };
+
+      if (existing != null) {
+        await supabaseC
+            .from('user_profiles')
+            .update(payload)
+            .eq('user_id', userId);
+      } else {
+        payload['user_id'] = userId;
+        await supabaseC.from('user_profiles').insert(payload);
+      }
       Get.offAll(() => const BottomNav());
     } catch (e) {
       debugPrint('Onboarding skip error: $e');

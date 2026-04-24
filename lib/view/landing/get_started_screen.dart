@@ -64,7 +64,7 @@ class GetStartedScreen extends StatelessWidget {
                         const SizedBox(height: 44),
 
                         const Text(
-                          'Spendify',
+                          'Spense',
                           style: TextStyle(
                             color: textPrimary,
                             fontSize: 40,

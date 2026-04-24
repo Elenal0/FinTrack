@@ -175,7 +175,8 @@ class TransactionController extends GetxController {
       debugPrint("User's balance updated successfully to: $newBalance");
     } catch (error) {
       debugPrint("Error updating user's balance: $error");
-      CustomToast.errorToast('Error', 'Failed to update balance');
+      debugPrint("Error type: ${error.runtimeType}");
+      CustomToast.errorToast('Error', 'Failed to update balance: $error');
     }
   }
 

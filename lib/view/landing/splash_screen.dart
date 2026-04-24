@@ -30,7 +30,7 @@ class SplashScreen extends StatelessWidget {
               const _Logo(),
               const SizedBox(height: 20),
               Text(
-                'Spendify',
+                'Spense',
                 style: TextStyle(
                   color: textPrimary,
                   fontSize: 28,

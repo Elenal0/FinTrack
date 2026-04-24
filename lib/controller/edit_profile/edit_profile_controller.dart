@@ -86,15 +86,30 @@ class EditProfileController extends GetxController {
               budgetController.text.replaceAll(',', '').trim()) ??
           0.0;
 
-      await supabaseC.from('user_profiles').upsert({
-        'user_id': userId,
+      final existing = await supabaseC
+          .from('user_profiles')
+          .select('user_id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      final payload = {
         'currency': currency.value,
         'currency_symbol': currencySymbol.value,
         'occupation': occupation.value,
         'monthly_budget': budget,
         'selected_categories': selectedCategories.toList(),
         'onboarding_complete': true,
-      });
+      };
+
+      if (existing != null) {
+        await supabaseC
+            .from('user_profiles')
+            .update(payload)
+            .eq('user_id', userId);
+      } else {
+        payload['user_id'] = userId;
+        await supabaseC.from('user_profiles').insert(payload);
+      }
 
       // Sync preferences to HomeController so UI updates immediately
       try {

@@ -22,7 +22,7 @@ class LoginController extends GetxController {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
         serverClientId:
-            '1022798183394-tq8i6uqjn86e4l6df8ebp7pudgrefb18.apps.googleusercontent.com',
+            '191198885447-g2l6us4q9ic0921nmp3h6beqd2k61vpu.apps.googleusercontent.com', 
       );
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {

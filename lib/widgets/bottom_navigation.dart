@@ -9,6 +9,7 @@ import 'package:spendify/config/app_theme.dart';
 import 'package:spendify/controller/goals_controller/goals_controller.dart';
 import 'package:spendify/controller/groups_controller/groups_controller.dart';
 import 'package:spendify/controller/savings_controller/savings_controller.dart';
+import 'package:spendify/controller/nav_controller.dart';
 import 'package:spendify/controller/walkthrough_controller.dart';
 import 'package:spendify/view/goals/goals_screen.dart';
 import 'package:spendify/view/home/home_screen.dart';
@@ -25,10 +26,13 @@ class BottomNav extends StatefulWidget {
 }
 
 class _BottomNavState extends State<BottomNav> {
-  int _current = 0;
+  late final NavController _navCtrl;
   bool _showcaseTriggered = false;
   bool _dialOpen = false;
   bool _dialVisible = false;
+
+  int get _current => _navCtrl.currentIndex.value;
+  set _current(int v) => _navCtrl.currentIndex.value = v;
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -40,6 +44,13 @@ class _BottomNavState extends State<BottomNav> {
   @override
   void initState() {
     super.initState();
+    _navCtrl = Get.isRegistered<NavController>()
+        ? Get.find<NavController>()
+        : Get.put(NavController(), permanent: true);
+    // Listen to external tab changes
+    ever(_navCtrl.currentIndex, (_) {
+      if (mounted) setState(() {});
+    });
     if (!Get.isRegistered<GoalsController>()) Get.put(GoalsController());
     if (!Get.isRegistered<SavingsController>()) Get.put(SavingsController());
     if (!Get.isRegistered<GroupsController>()) Get.put(GroupsController(), permanent: true);
@@ -117,7 +128,7 @@ class _BottomNavState extends State<BottomNav> {
               GestureDetector(
                 onTap: _closeDial,
                 behavior: HitTestBehavior.translucent,
-                child: IndexedStack(index: _current, children: _screens),
+                child: Obx(() => IndexedStack(index: _navCtrl.currentIndex.value, children: _screens)),
               ),
               if (_dialVisible)
                 Positioned.fill(
