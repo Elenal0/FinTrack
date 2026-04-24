@@ -11,6 +11,8 @@ import 'package:spendify/services/widget_service.dart';
 import 'package:spendify/utils/utils.dart';
 import 'package:spendify/widgets/toast/custom_toast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:spendify/controller/nav_controller.dart';
 
 import '../../routes/app_pages.dart';
 import 'package:spendify/services/notification_service.dart';
@@ -142,6 +144,7 @@ class HomeController extends GetxController {
   Future<void> signOut() async {
     final prefs = await SharedPreferences.getInstance();
     try {
+      await GoogleSignIn().signOut();
       await supabaseC.auth.signOut();
       CustomToast.successToast("Success", "Signed out successfully");
     } on AuthException catch (error) {
@@ -152,6 +155,9 @@ class HomeController extends GetxController {
       await prefs.remove('name');
       await prefs.remove('email');
       await prefs.remove('walkthrough_shown_v1');
+      if (Get.isRegistered<NavController>()) {
+        Get.find<NavController>().goToTab(0);
+      }
       Get.offAllNamed(Routes.LOGIN);
     }
   }
