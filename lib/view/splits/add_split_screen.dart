@@ -393,6 +393,25 @@ class _AddSplitScreenState extends State<AddSplitScreen> {
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
                   ],
+                  onTap: () {
+                    // Auto-fill logic
+                    final currentText = _customAmtCtrls[m.userId]?.text ?? '';
+                    if (currentText.isEmpty || currentText == '0') {
+                      final total = double.tryParse(_amountCtrl.text) ?? 0;
+                      double sumOfOthers = 0;
+                      _customAmtCtrls.forEach((uid, ctrl) {
+                        if (uid != m.userId) {
+                          sumOfOthers += double.tryParse(ctrl.text) ?? 0;
+                        }
+                      });
+                      final remainder = total - sumOfOthers;
+                      if (remainder > 0) {
+                        setState(() {
+                          _customAmtCtrls[m.userId]?.text = remainder.toStringAsFixed(2);
+                        });
+                      }
+                    }
+                  },
                   textAlign: TextAlign.right,
                   style: TextStyle(
                     color: textPrimary,

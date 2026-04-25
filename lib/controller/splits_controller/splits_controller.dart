@@ -320,11 +320,10 @@ class SplitsController extends GetxController {
       await supabaseC.from('split_shares').insert(shareRows);
 
       if (paidByUserId == uid) {
-        final myShare = shares[uid] ?? 0;
-        if (myShare > 0) {
+        try {
           await supabaseC.from('transactions').insert({
             'user_id': uid,
-            'amount': myShare,
+            'amount': totalAmount,
             'description': title.trim(),
             'type': 'expense',
             'category': category,
@@ -332,20 +331,37 @@ class SplitsController extends GetxController {
             'source': 'split',
             'split_id': splitId,
           });
-
-          try {
-            final homeC = Get.find<HomeController>();
-            await homeC.fetchTotalBalanceData();
-          } catch (_) {}
+        } catch (e) {
+          debugPrint('Transaction log failed (missing columns?): $e');
         }
+
+        try {
+          final homeC = Get.find<HomeController>();
+          await homeC.fetchTotalBalanceData();
+          await homeC.getTransactions();
+        } catch (_) {}
       }
 
       await _load();
       CustomToast.successToast('Added', 'Split added successfully');
+
+      // Inject system message into chat
+      try {
+        final myName = Get.find<HomeController>().userName.value;
+        await supabaseC.from('group_chats').insert({
+          'group_id': groupId,
+          'user_id': uid,
+          'split_id': splitId,
+          'message': '🔔 $myName added a new expense: "$title" for ₹${totalAmount.toStringAsFixed(2)}',
+        });
+      } catch (chatError) {
+        debugPrint('Failed to send system message: $chatError');
+      }
+
       return true;
     } catch (e) {
       debugPrint('createSplit error: $e');
-      CustomToast.errorToast('Error', 'Failed to add split');
+      CustomToast.errorToast('Error', 'Failed to add split: ${e.toString()}');
       return false;
     } finally {
       isSubmitting.value = false;
@@ -377,45 +393,75 @@ class SplitsController extends GetxController {
       await fetchSplits();
       _recomputeBalances();
 
-// Transaction for the payer (income)
+      // Transaction for the payer (income)
       if (split.paidBy == uid) {
-        final settlerName = _nameOf(share.userId);
-        await supabaseC.from('transactions').insert({
-          'user_id': uid,
-          'amount': share.amountOwed,
-          'description': '$settlerName settled "${split.title}"',
-          'type': 'income',
-          'category': split.category,
-          'date': DateTime.now().toIso8601String().substring(0, 10),
-          'source': 'settlement',
-          'split_id': split.id,
-        });
+        try {
+          final settlerName = _nameOf(share.userId);
+          await supabaseC.from('transactions').insert({
+            'user_id': uid,
+            'amount': share.amountOwed,
+            'description': '$settlerName settled "${split.title}"',
+            'type': 'income',
+            'category': split.category,
+            'date': DateTime.now().toIso8601String().substring(0, 10),
+            'source': 'settlement',
+            'split_id': split.id,
+          });
+        } catch (e) {
+          debugPrint('Transaction log failed: $e');
+        }
       }
 
-// Transaction for the debtor (expense)
+      // Transaction for the debtor (expense)
       if (share.userId == uid) {
-        final payerName = _nameOf(split.paidBy);
-        await supabaseC.from('transactions').insert({
-          'user_id': uid,
-          'amount': share.amountOwed,
-          'description': 'Settled "${split.title}" with $payerName',
-          'type': 'expense',
-          'category': split.category,
-          'date': DateTime.now().toIso8601String().substring(0, 10),
-          'source': 'settlement',
-          'split_id': split.id,
-        });
+        try {
+          final payerName = _nameOf(split.paidBy);
+          await supabaseC.from('transactions').insert({
+            'user_id': uid,
+            'amount': share.amountOwed,
+            'description': 'Settled "${split.title}" with $payerName',
+            'type': 'expense',
+            'category': split.category,
+            'date': DateTime.now().toIso8601String().substring(0, 10),
+            'source': 'settlement',
+            'split_id': split.id,
+          });
+        } catch (e) {
+          debugPrint('Transaction log failed: $e');
+        }
       }
 
       try {
         final homeC = Get.find<HomeController>();
         await homeC.fetchTotalBalanceData();
-      } catch (_) {}
+        await homeC.getTransactions();
+        
+        // Inject system message into chat
+        final myName = homeC.userName.value;
+        final payerName = _nameOf(split.paidBy);
+        final otherName = _nameOf(share.userId);
+        
+        String msg = '';
+        if (share.userId == uid) {
+          msg = '✅ $myName settled ₹${share.amountOwed.toStringAsFixed(2)} for "${split.title}" with $payerName';
+        } else {
+          msg = '✅ $myName marked ₹${share.amountOwed.toStringAsFixed(2)} for "${split.title}" as settled by $otherName';
+        }
+
+        await supabaseC.from('group_chats').insert({
+          'group_id': groupId,
+          'user_id': uid,
+          'split_id': split.id,
+          'message': msg,
+        });
+      } catch (e) {
+        debugPrint('Failed post-settle logic: $e');
+      }
 
       CustomToast.successToast('Settled', 'Share marked as settled');
     } catch (e) {
       debugPrint('settleShare error: $e');
-      CustomToast.errorToast('Error', 'Failed to settle share');
+      CustomToast.errorToast('Error', 'Failed to settle share: ${e.toString()}');
     }
   }
 

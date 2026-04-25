@@ -10,7 +10,9 @@ import 'package:spendify/main.dart';
 import 'package:spendify/model/group_model.dart';
 import 'package:spendify/model/split_model.dart';
 import 'package:spendify/view/splits/add_split_screen.dart';
+import 'package:spendify/view/splits/group_chat_screen.dart';
 import 'package:spendify/widgets/toast/custom_toast.dart';
+import 'package:spendify/controller/nav_controller.dart';
 
 class GroupDetailScreen extends StatefulWidget {
   final GroupModel group;
@@ -66,6 +68,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               onPressed: () => Get.back(),
             ),
             actions: [
+              IconButton(
+                icon: PhosphorIcon(PhosphorIconsLight.chatCircleDots,
+                    color: textPrimary, size: 24),
+                onPressed: () => Get.to(
+                  () => GroupChatScreen(group: widget.group),
+                  transition: Transition.rightToLeft,
+                ),
+              ),
               IconButton(
                 icon: PhosphorIcon(PhosphorIconsLight.doorOpen,
                     color: textMuted, size: 20),
@@ -192,21 +202,34 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           // Expenses header — static, no Obx needed
           SliverToBoxAdapter(
             child: Obx(() => Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 32, 20, 12),
                   child: Row(
                     children: [
+                      Container(
+                        width: 4,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: AppColor.primary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Text(
                         'Expenses',
                         style: TextStyle(
                           color: textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       const Spacer(),
                       Text(
                         '${_ctrl.splits.length} total',
-                        style: TextStyle(color: textMuted, fontSize: 13),
+                        style: TextStyle(
+                            color: textMuted,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
@@ -474,17 +497,22 @@ class _BalancesSection extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: Text(label,
-                            style: TextStyle(color: textMuted, fontSize: 13)),
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                              color: textMuted,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500),
+                        ),
                       ),
                       Text(
                         '₹${fmt.format(e.value.abs())}',
                         style: TextStyle(
                             color: color,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800),
                       ),
                     ],
                   ),
@@ -492,28 +520,49 @@ class _BalancesSection extends StatelessWidget {
               }),
             ],
             if (ctrl.simplifiedDebts.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Group settlements',
-                style: TextStyle(
-                    color: textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: AppColor.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Group settlements',
+                    style: TextStyle(
+                        color: textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               ...ctrl.simplifiedDebts.map((d) => Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 11),
+                        horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
                       color: cardBg,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: border),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: border.withValues(alpha: 0.5)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
                         _MiniAvatar(name: d.fromName, color: AppColor.expense),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: RichText(
                             text: TextSpan(
@@ -522,20 +571,22 @@ class _BalancesSection extends StatelessWidget {
                                   text: d.fromName,
                                   style: TextStyle(
                                     color: textPrimary,
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 TextSpan(
                                   text: ' → ',
-                                  style:
-                                      TextStyle(color: textMuted, fontSize: 13),
+                                  style: TextStyle(
+                                      color: textMuted,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w300),
                                 ),
                                 TextSpan(
                                   text: d.toName,
                                   style: TextStyle(
                                     color: textPrimary,
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -547,8 +598,8 @@ class _BalancesSection extends StatelessWidget {
                           '₹${fmt.format(d.amount)}',
                           style: const TextStyle(
                             color: AppColor.expense,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ],
@@ -558,7 +609,7 @@ class _BalancesSection extends StatelessWidget {
           ],
         ),
       );
-    }); // ✅ closes Obx
+    });
   }
 }
 
@@ -735,25 +786,26 @@ class _SplitTileState extends State<_SplitTile> {
                           '₹${fmt.format(split.totalAmount)}',
                           style: TextStyle(
                             color: textPrimary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         if (isFullySettled)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColor.income.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(100),
+                              color: AppColor.income.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Text(
                               'Settled',
                               style: TextStyle(
                                 color: AppColor.income,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           )
@@ -763,7 +815,7 @@ class _SplitTileState extends State<_SplitTile> {
                             style: const TextStyle(
                               color: AppColor.income,
                               fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w700,
                             ),
                           )
                         else if (myShare != null &&
@@ -771,24 +823,28 @@ class _SplitTileState extends State<_SplitTile> {
                             !paidByMe)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColor.expense.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(100),
+                              color: AppColor.expense.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               '₹${fmt.format(myShare.amountOwed)} due',
                               style: const TextStyle(
                                 color: AppColor.expense,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           )
                         else
                           Text(
                             DateFormat('d MMM').format(split.date),
-                            style: TextStyle(color: textMuted, fontSize: 12),
+                            style: TextStyle(
+                                color: textMuted,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500),
                           ),
                       ],
                     ),
@@ -838,6 +894,29 @@ class _SplitTileState extends State<_SplitTile> {
                                 )),
                       ),
                     
+                    if (paidByMe || (myShare != null && myShare.isSettled))
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 5, 0, 14),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              final nav = Get.find<NavController>();
+                              nav.goToTab(1); // Go to Statistics/Transactions tab
+                              Get.until((route) => Get.currentRoute == '/bottom_nav' || route.isFirst);
+                            },
+                            icon: const PhosphorIcon(PhosphorIconsLight.arrowSquareOut, size: 14),
+                            label: const Text('View in Transaction History', 
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColor.primary,
+                              backgroundColor: AppColor.primary.withValues(alpha: 0.05),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

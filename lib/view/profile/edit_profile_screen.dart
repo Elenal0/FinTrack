@@ -62,6 +62,12 @@ class EditProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Basic Info ────────────────────────────────
+              _SectionHeader(label: 'Account Information', textMuted: textMuted),
+              _BasicInfoSection(isDark: isDark, ctrl: ctrl),
+              
+              Divider(height: 32, color: divColor),
+
               // ── Currency ──────────────────────────────────
               _SectionHeader(label: 'Currency', textMuted: textMuted),
               _CurrencySection(isDark: isDark, ctrl: ctrl),
@@ -87,6 +93,110 @@ class EditProfileScreen extends StatelessWidget {
           ),
         );
       }),
+    );
+  }
+}
+
+class _BasicInfoSection extends StatelessWidget {
+  final bool isDark;
+  final EditProfileController ctrl;
+  const _BasicInfoSection({required this.isDark, required this.ctrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = isDark ? AppColor.darkSurface : AppColor.lightSurface;
+    final border = isDark ? AppColor.darkBorder : AppColor.lightBorder;
+    final textColor = isDark ? AppColor.textPrimary : AppColor.lightTextPrimary;
+    final hintColor = isDark ? AppColor.textTertiary : AppColor.lightTextTertiary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          _InfoField(
+            controller: ctrl.nameController,
+            label: 'Full Name',
+            hint: 'Your name',
+            icon: PhosphorIconsLight.user,
+            isDark: isDark,
+            surface: surface,
+            border: border,
+            textColor: textColor,
+            hintColor: hintColor,
+          ),
+          const SizedBox(height: 12),
+          _InfoField(
+            controller: ctrl.emailController,
+            label: 'Email Address',
+            hint: 'your@email.com',
+            icon: PhosphorIconsLight.envelope,
+            isDark: isDark,
+            surface: surface,
+            border: border,
+            textColor: textColor,
+            hintColor: hintColor,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+  final PhosphorIconData icon;
+  final bool isDark;
+  final Color surface;
+  final Color border;
+  final Color textColor;
+  final Color hintColor;
+
+  const _InfoField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    required this.icon,
+    required this.isDark,
+    required this.surface,
+    required this.border,
+    required this.textColor,
+    required this.hintColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        children: [
+          PhosphorIcon(icon, color: hintColor, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                labelText: label,
+                labelStyle: TextStyle(color: hintColor, fontSize: 12),
+                hintText: hint,
+                hintStyle: TextStyle(color: hintColor, fontSize: 14),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

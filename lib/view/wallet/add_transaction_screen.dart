@@ -243,6 +243,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   void _submit() {
     HapticFeedback.mediumImpact();
+    
+    // Auto-fill category for Income
+    if (!_isExpense.value) {
+      controller.selectedCategory.value = 'Income';
+    }
+
     if (_isEditMode) {
       controller.updateTransaction(_transactionId);
       return;
@@ -406,9 +412,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       }),
                       const SizedBox(height: 28),
 
-                      // Category chips
-                      _buildCategoryRow(isDark, textMuted),
-                      const SizedBox(height: 20),
+                      // Category chips (Hided for income)
+                      Obx(() => _isExpense.value
+                          ? _buildCategoryRow(isDark, textMuted)
+                          : const SizedBox.shrink()),
+                      Obx(() => SizedBox(height: _isExpense.value ? 20 : 0)),
 
                       // Date + Note rows
                       Padding(

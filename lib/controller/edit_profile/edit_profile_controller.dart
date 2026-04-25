@@ -12,6 +12,8 @@ class EditProfileController extends GetxController {
   final RxDouble monthlyBudget = 0.0.obs;
   final RxList<String> selectedCategories = <String>[].obs;
   final TextEditingController budgetController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
 
   final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
@@ -25,6 +27,8 @@ class EditProfileController extends GetxController {
   @override
   void onClose() {
     budgetController.dispose();
+    nameController.dispose();
+    emailController.dispose();
     super.onClose();
   }
 
@@ -53,6 +57,14 @@ class EditProfileController extends GetxController {
         if (budget > 0) {
           budgetController.text = budget.toStringAsFixed(0);
         }
+      }
+
+      // Load basic info from 'users' table
+      final userResponse =
+          await supabaseC.from('users').select().eq('id', userId).maybeSingle();
+      if (userResponse != null) {
+        nameController.text = userResponse['name'] ?? '';
+        emailController.text = userResponse['email'] ?? '';
       }
     } catch (e) {
       debugPrint('EditProfile load error: $e');
@@ -111,9 +123,17 @@ class EditProfileController extends GetxController {
         await supabaseC.from('user_profiles').insert(payload);
       }
 
+      // Update Basic Info in 'users' table
+      await supabaseC.from('users').update({
+        'name': nameController.text.trim(),
+        'email': emailController.text.trim(),
+      }).eq('id', userId);
+
       // Sync preferences to HomeController so UI updates immediately
       try {
         final hc = Get.find<HomeController>();
+        hc.userName.value = nameController.text.trim();
+        hc.userEmail.value = emailController.text.trim();
         hc.currencySymbol.value = currencySymbol.value;
         hc.monthlyBudget.value = budget;
         hc.selectedCategories.value = selectedCategories.toList();
