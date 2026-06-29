@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Spendify is a full-featured personal finance app built with Flutter. It helps you track income and expenses, set budgets, manage savings goals, split bills with friends, and gain intelligent insights into your spending — all backed by Supabase and powered by a clean GetX architecture.
+Spense is a full-featured personal finance app built with Flutter. It helps you track income and expenses, set budgets, manage savings goals, split bills with friends, and gain intelligent insights into your spending — all backed by Supabase and powered by a clean GetX architecture.
 
 ---
 
