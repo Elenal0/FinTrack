@@ -56,7 +56,7 @@ class SpendifyWidgetPreview extends StatelessWidget {
                 children: [
                   // App name
                   Text(
-                    'Spendify',
+                    'Spense',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.75),
                       fontSize: 11,

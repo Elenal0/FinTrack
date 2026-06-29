@@ -41,7 +41,7 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- Spendify home screen widget -->
+        <!-- Spense home screen widget -->
         <receiver
             android:name=".SpendifyWidgetReceiver"
             android:exported="true">
