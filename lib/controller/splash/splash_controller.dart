@@ -31,13 +31,13 @@ class SplashController extends GetxController {
             .maybeSingle();
 
         if (profile != null && profile['onboarding_complete'] == true) {
-          Get.offAll(const BottomNav());
+          Get.offAllNamed(Routes.BOTTOM_NAV);
         } else {
           Get.offAllNamed(Routes.ONBOARDING);
         }
       } catch (_) {
         // Offline or table error — user is logged in so go home, not onboarding
-        Get.offAll(const BottomNav());
+        Get.offAllNamed(Routes.BOTTOM_NAV);
       }
     } else {
       Get.offAllNamed(Routes.GETSTARTED);

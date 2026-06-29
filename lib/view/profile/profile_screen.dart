@@ -30,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   void initState() {
     super.initState();
+    Get.find<HomeController>().getProfile();
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -161,6 +162,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                         onTap: () =>
                             Get.to(() => const EditProfileScreen()),
                       ),
+                      Obx(() => ctrl.isAdmin.value
+                          ? _SettingTile(
+                              icon: PhosphorIconsLight.shieldCheck,
+                              label: 'Admin Panel',
+                              subtitle: 'App statistics & user management',
+                              textPrimary: textPrimary,
+                              textMuted: textMuted,
+                              divColor: divColor,
+                              showDivider: true,
+                              onTap: () => Get.toNamed(Routes.ADMIN_DASHBOARD),
+                            )
+                          : const SizedBox.shrink()),
                       Obx(() => _SettingTile(
                             icon: themeCtrl.isDarkMode
                                 ? PhosphorIconsLight.moon

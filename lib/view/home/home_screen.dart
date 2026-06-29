@@ -26,11 +26,10 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = Get.isRegistered<HomeController>()
-        ? Get.find<HomeController>()
-        : Get.put(HomeController());
-    if (!Get.isRegistered<TransactionController>())
+    final ctrl = Get.find<HomeController>();
+    if (!Get.isRegistered<TransactionController>()) {
       Get.put(TransactionController());
+    }
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(

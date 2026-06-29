@@ -44,19 +44,11 @@ class _BottomNavState extends State<BottomNav> {
   @override
   void initState() {
     super.initState();
-    _navCtrl = Get.isRegistered<NavController>()
-        ? Get.find<NavController>()
-        : Get.put(NavController(), permanent: true);
+    _navCtrl = Get.find<NavController>();
     // Listen to external tab changes
     ever(_navCtrl.currentIndex, (_) {
       if (mounted) setState(() {});
     });
-    if (!Get.isRegistered<GoalsController>()) Get.put(GoalsController());
-    if (!Get.isRegistered<SavingsController>()) Get.put(SavingsController());
-    if (!Get.isRegistered<GroupsController>()) Get.put(GroupsController(), permanent: true);
-    if (!Get.isRegistered<WalkthroughController>()) {
-      Get.put(WalkthroughController());
-    }
   }
 
   void _toggleDial() {

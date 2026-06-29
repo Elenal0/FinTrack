@@ -14,6 +14,10 @@ import 'package:spendify/widgets/toast/custom_toast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:spendify/controller/nav_controller.dart';
+import 'package:spendify/controller/walkthrough_controller.dart';
+import 'package:spendify/controller/goals_controller/goals_controller.dart';
+import 'package:spendify/controller/savings_controller/savings_controller.dart';
+import 'package:spendify/controller/groups_controller/groups_controller.dart';
 
 import '../../routes/app_pages.dart';
 import 'package:spendify/services/notification_service.dart';
@@ -21,6 +25,7 @@ import 'package:spendify/services/notification_service.dart';
 class HomeController extends GetxController {
   var userEmail = ''.obs;
   var userName = ''.obs;
+  var isAdmin = false.obs;
   var totalBalance = 0.0.obs;
   RxDouble newBalance = RxDouble(0.0);
   var imageUrl = ''.obs;
@@ -69,8 +74,12 @@ class HomeController extends GetxController {
   }
 
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
+    _initData();
+  }
+
+  Future<void> _initData() async {
     await getProfile();
     await fetchTotalBalanceData();
     await getTransactions();
@@ -116,6 +125,7 @@ class HomeController extends GetxController {
       userName.value = userData['name'] ?? '';
       totalBalance.value = (userData['balance'] ?? 0.0).toDouble();
       imageUrl.value = userData['url'] ?? '';
+      isAdmin.value = userData['is_admin'] ?? false;
       
       // Sync with NavController so UI updates
       if (Get.isRegistered<NavController>()) {
@@ -144,7 +154,8 @@ class HomeController extends GetxController {
         debugPrint('HomeController: failed to load user_profiles — $e');
       }
     } else {
-      CustomToast.errorToast("Error", 'User not found');
+      // No user logged in — splash screen will redirect to login, no error needed
+      return;
     }
   }
 
@@ -162,10 +173,22 @@ class HomeController extends GetxController {
       await prefs.remove('name');
       await prefs.remove('email');
       await prefs.remove('walkthrough_shown_v1');
-      if (Get.isRegistered<NavController>()) {
-        Get.find<NavController>().goToTab(0);
-      }
+
+      // ⚠️ Navigate FIRST so all Obx widgets are removed from the tree,
+      // THEN delete controllers. Deleting before navigating causes a crash
+      // because widgets still on screen try to rebuild with a missing controller.
       Get.offAllNamed(Routes.LOGIN);
+
+      // Wait one frame for navigation to complete and widget tree to clear
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // Now safe to delete — no widgets are listening anymore
+      Get.delete<WalkthroughController>(force: true);
+      Get.delete<GoalsController>(force: true);
+      Get.delete<SavingsController>(force: true);
+      Get.delete<GroupsController>(force: true);
+      Get.delete<NavController>(force: true);
+      Get.delete<HomeController>(force: true);
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:spendify/config/app_color.dart';
 import 'package:spendify/controller/auth_controller/login_controller.dart';
+import 'package:spendify/routes/app_pages.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -121,6 +122,19 @@ class LoginScreen extends StatelessWidget {
                   'By signing in, you agree to our Terms & Privacy Policy.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: textMuted, fontSize: 12, height: 1.5),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Get.toNamed(Routes.ADMIN_LOGIN),
+                  child: Text(
+                    'Admin Access',
+                    style: TextStyle(
+                      color: textMuted.withValues(alpha: 0.7),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],

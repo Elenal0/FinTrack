@@ -12,6 +12,9 @@ abstract class Routes {
   static const PROFILE = _Paths.PROFILE;
   static const ONBOARDING = _Paths.ONBOARDING;
   static const SUPPORT = _Paths.SUPPORT;
+  static const ADMIN_DASHBOARD = _Paths.ADMIN_DASHBOARD;
+  static const ADMIN_LOGIN = _Paths.ADMIN_LOGIN;
+  static const BOTTOM_NAV = _Paths.BOTTOM_NAV;
 }
 
 abstract class _Paths {
@@ -22,4 +25,7 @@ abstract class _Paths {
   static const PROFILE = '/profile';
   static const ONBOARDING = '/onboarding';
   static const SUPPORT = '/support';
+  static const ADMIN_DASHBOARD = '/admin-dashboard';
+  static const ADMIN_LOGIN = '/admin-login';
+  static const BOTTOM_NAV = '/main';
 }
