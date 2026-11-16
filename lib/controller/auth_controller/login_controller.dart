@@ -22,7 +22,7 @@ class LoginController extends GetxController {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
         serverClientId:
-            '61525107142-sgpoh69rfp2d0tfnh79h7bdrd1j7mtdb.apps.googleusercontent.com', 
+            '802173649464-0reabroklcspbaoi552uhl71t09t84bt.apps.googleusercontent.com',
       );
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
@@ -116,7 +116,7 @@ class LoginController extends GetxController {
           .eq('user_id', userId)
           .maybeSingle();
       if (profile != null && profile['onboarding_complete'] == true) {
-        Get.offAllNamed(Routes.BOTTOM_NAV);
+        Get.offAll(const BottomNav());
       } else {
         Get.offAllNamed(Routes.ONBOARDING);
       }
